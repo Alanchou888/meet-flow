@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import MeetingRescheduleSuggestions from "@/components/ui/meeting-reschedule-suggestions";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -52,11 +53,11 @@ const INITIAL_MEMBERS: Member[] = [
     name: "我",
     color: "bg-blue-500",
     availability: [
-      slot(0, 9), slot(0, 10), slot(0, 11),          // Mon 9–12
-      slot(0, 14), slot(0, 15), slot(0, 16),         // Mon 14–17
-      slot(2, 9),  slot(2, 10), slot(2, 11),         // Wed 9–12（共同）
-      slot(3, 14), slot(3, 15), slot(3, 16),         // Thu 14–17
-      slot(4, 9),  slot(4, 10),                      // Fri 9–11
+      slot(0, 9), slot(0, 10), slot(0, 11),
+      slot(0, 14), slot(0, 15), slot(0, 16),
+      slot(2, 9), slot(2, 10), slot(2, 11),
+      slot(3, 14), slot(3, 15), slot(3, 16),
+      slot(4, 9), slot(4, 10),
     ],
   },
   {
@@ -64,10 +65,10 @@ const INITIAL_MEMBERS: Member[] = [
     name: "小梁",
     color: "bg-green-500",
     availability: [
-      slot(0, 9),  slot(0, 10), slot(0, 11),         // Mon 9–12
-      slot(2, 9),  slot(2, 10), slot(2, 11),         // Wed 9–12（共同）
-      slot(2, 14), slot(2, 15), slot(2, 16),         // Wed 14–17
-      slot(4, 9),  slot(4, 10),                      // Fri 9–11
+      slot(0, 9), slot(0, 10), slot(0, 11),
+      slot(2, 9), slot(2, 10), slot(2, 11),
+      slot(2, 14), slot(2, 15), slot(2, 16),
+      slot(4, 9), slot(4, 10),
     ],
   },
   {
@@ -75,9 +76,9 @@ const INITIAL_MEMBERS: Member[] = [
     name: "盧盧",
     color: "bg-purple-500",
     availability: [
-      slot(1, 10), slot(1, 11), slot(1, 12),         // Tue 10–13
-      slot(2, 9),  slot(2, 10), slot(2, 11),         // Wed 9–12（共同）
-      slot(3, 14), slot(3, 15),                      // Thu 14–16
+      slot(1, 10), slot(1, 11), slot(1, 12),
+      slot(2, 9), slot(2, 10), slot(2, 11),
+      slot(3, 14), slot(3, 15),
     ],
   },
 ];
@@ -104,32 +105,39 @@ function ScheduleGrid({
   const [drag, setDrag] = useState<DragState | null>(null);
   const dragging = useRef(false);
 
-  // Commit the selection when mouse is released anywhere
   useEffect(() => {
     function handleMouseUp() {
       if (!dragging.current || !drag) return;
+
       const d0 = Math.min(drag.startDay, drag.curDay);
       const d1 = Math.max(drag.startDay, drag.curDay);
       const h0 = Math.min(drag.startHourIdx, drag.curHourIdx);
       const h1 = Math.max(drag.startHourIdx, drag.curHourIdx);
+
       const selected: TimeSlot[] = [];
-      for (let d = d0; d <= d1; d++)
-        for (let hi = h0; hi <= h1; hi++)
+      for (let d = d0; d <= d1; d++) {
+        for (let hi = h0; hi <= h1; hi++) {
           selected.push(slot(d, HOURS[hi]));
+        }
+      }
+
       onBatchToggle?.(selected, drag.filling);
       dragging.current = false;
       setDrag(null);
     }
+
     document.addEventListener("mouseup", handleMouseUp);
     return () => document.removeEventListener("mouseup", handleMouseUp);
   }, [drag, onBatchToggle]);
 
   function inDragRect(d: number, hi: number): boolean {
     if (!drag) return false;
+
     const d0 = Math.min(drag.startDay, drag.curDay);
     const d1 = Math.max(drag.startDay, drag.curDay);
     const h0 = Math.min(drag.startHourIdx, drag.curHourIdx);
     const h1 = Math.max(drag.startHourIdx, drag.curHourIdx);
+
     return d >= d0 && d <= d1 && hi >= h0 && hi <= h1;
   }
 
@@ -159,7 +167,6 @@ function ScheduleGrid({
 
                 let cellClass: string;
                 if (inRect) {
-                  // Preview: show what the result will be
                   cellClass = drag!.filling
                     ? "bg-primary/60 border-primary/60"
                     : "bg-muted border-border opacity-40";
@@ -256,6 +263,7 @@ export default function MeetFlow() {
   function addMember() {
     const name = newName.trim();
     if (!name) return;
+
     const color = COLORS[members.length % COLORS.length];
     const newMember: Member = {
       id: `member-${Date.now()}`,
@@ -263,6 +271,7 @@ export default function MeetFlow() {
       color,
       availability: [],
     };
+
     setMembers((prev) => [...prev, newMember]);
     setNewName("");
     setOpen(false);
@@ -270,7 +279,6 @@ export default function MeetFlow() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* ── Header ── */}
       <header className="border-b bg-background/80 backdrop-blur sticky top-0 z-10">
         <div className="max-w-4xl mx-auto px-6 py-4 flex items-center gap-3">
           <CalendarCheck className="w-5 h-5" />
@@ -281,7 +289,6 @@ export default function MeetFlow() {
         </div>
       </header>
 
-      {/* ── Main ── */}
       <main className="max-w-4xl mx-auto px-6 py-8">
         <Tabs defaultValue="members">
           <TabsList className="mb-8 h-10">
@@ -303,7 +310,6 @@ export default function MeetFlow() {
             </TabsTrigger>
           </TabsList>
 
-          {/* ── Tab 1: Members ── */}
           <TabsContent value="members">
             <div className="flex items-center justify-between mb-5">
               <div>
@@ -367,7 +373,6 @@ export default function MeetFlow() {
             </div>
           </TabsContent>
 
-          {/* ── Tab 2: My Schedule ── */}
           <TabsContent value="my-schedule">
             <div className="mb-5">
               <h2 className="text-base font-semibold">我的時間表</h2>
@@ -391,7 +396,6 @@ export default function MeetFlow() {
             </Card>
           </TabsContent>
 
-          {/* ── Tab 3: View Member ── */}
           <TabsContent value="view-member">
             <div className="mb-5">
               <h2 className="text-base font-semibold">查看成員時間表</h2>
@@ -451,7 +455,6 @@ export default function MeetFlow() {
             )}
           </TabsContent>
 
-          {/* ── Tab 4: Common Availability ── */}
           <TabsContent value="common">
             <div className="mb-5">
               <h2 className="text-base font-semibold">共同空閒時間</h2>
@@ -493,6 +496,8 @@ export default function MeetFlow() {
                 })}
               </div>
             )}
+
+            <MeetingRescheduleSuggestions />
           </TabsContent>
         </Tabs>
       </main>
