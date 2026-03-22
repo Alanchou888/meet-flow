@@ -1,5 +1,6 @@
 "use client";
 
+import MeetingRescheduleSuggestions from '@/components/ui/meeting-reschedule-suggestions';
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -426,6 +427,8 @@ export default function MeetFlow() {
                 })}
               </div>
             )}
+
+            <MeetingRescheduleSuggestions />
           </TabsContent>
         </Tabs>
       </main>
